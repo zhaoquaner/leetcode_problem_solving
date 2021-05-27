@@ -1,0 +1,98 @@
+# 18-链表中倒数第k个结点
+
+剑指Offer-22
+
+<img src="https://crayon-1302863897.cos.ap-beijing.myqcloud.com/image/image-20210428193632556.png" alt="image-20210428193632556" style="zoom:50%;" />
+
+
+
+## 自己的做法
+
+### 算法思想
+
+首先遍历链表，得出链表长度n，然后再从头结点开始，走n - k步，即为倒数第k个结点。
+
+
+
+### 算法实现
+
+```c++
+class Solution {
+public:
+    ListNode* getKthFromEnd(ListNode* head, int k) {
+        ListNode * temp = head;
+        int count = 0;
+        while (temp != nullptr) {
+            count++;
+            temp = temp->next;
+        }
+        if(k < 1 && k > count) {return nullptr;}
+        temp = head;
+        for(int i = 0; i < count - k; i++) {
+            temp = temp->next;
+        }
+        return temp;
+    }
+};
+```
+
+
+
+### 性能分析
+
+时间复杂度：$$O(n)$$。
+
+空间复杂度：$$O(1)$$。
+
+
+
+## 官方做法
+
+## 算法思想
+
+使用双指针。
+
+倒数第k个结点。距离最后一个节点的距离是k - 1。也就是从倒数第k个节点开始，走 k - 1步即可到达最后一个节点。
+
+所以使用两个指针：former和latter。former指针从头节点开始走k步。这时，former和latter距离是k 。
+
+然后 同时移动两个指针向后走，直到former指针指向了最后一个节点的下一个位置，也就是null。
+
+这时，latter指向的就是倒数第k个节点。
+
+
+
+<img src="https://crayon-1302863897.cos.ap-beijing.myqcloud.com/image/21年04月28日19时57分23秒.gif" alt="21年04月28日19时57分23秒" style="zoom:47%;" />
+
+### 算法实现
+
+```c++
+
+class Solution {
+public:
+    ListNode* getKthFromEnd(ListNode* head, int k) {
+        ListNode * former = head;
+        ListNode * latter = head;
+        for(int i = 0; i < k; i++) {
+            if(former == nullptr) {return nullptr;}
+            former = former->next;
+        }
+        while (former != nullptr) {
+            former = former->next;
+            latter = latter->next;
+        }
+        return latter;
+    }
+};
+```
+
+
+
+注：默认不考虑k的越界问题。
+
+### 性能分析
+
+时间复杂度：$$O(n)$$。
+
+空间复杂度：$$O(1)$$。
+

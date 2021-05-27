@@ -1,0 +1,83 @@
+# 32-两数相加II
+
+<img src="https://crayon-1302863897.cos.ap-beijing.myqcloud.com/image/image-20210510214656496.png" alt="image-20210510214656496" style="zoom:50%;" />
+
+
+
+## 自己的做法
+
+### 算法思想
+
+使用两个栈来分别存储两个数。最高位会放到栈的底部。
+
+然后两个栈同时出栈，相加，并添加到新链表头部即可。
+
+需要注意的是，在两个栈都空了以后，还应该判断一下进位是否为1，如果为1，则应该再创建一个值为1的新节点，为0则不用。
+
+
+
+### 算法实现
+
+```c++
+class Solution {
+public:
+    static ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+        stack<int> num1;
+        stack<int> num2;
+        ListNode * node = l1;
+        while (node) {
+            num1.push(node->val);
+            node = node->next;
+        }
+        node = l2;
+        while (node) {
+            num2.push(node->val);
+            node = node->next;
+        }
+
+        ListNode * dummy =  new ListNode();
+        ListNode * cur = dummy;
+        int carry = 0;
+        while (!num1.empty() || !num2.empty()) {
+            int sum = 0;
+            if(!num1.empty() && !num2.empty()) {
+                sum = num1.top() + num2.top() +carry;
+                num1.pop();
+                num2.pop();
+            } else if(num1.empty()) {
+                sum = num2.top() +carry;
+                num2.pop();
+            } else {
+                sum = num1.top() + carry;
+                num1.pop();
+            }
+            carry = sum >= 10 ? 1 : 0;
+            sum = sum % 10;
+            ListNode * temp = new ListNode(sum);
+            temp->next = cur->next;
+            cur->next = temp;
+        }
+        if(carry == 1) {
+            ListNode * temp = new ListNode(1);
+            temp->next = cur->next;
+            cur->next = temp;
+        }
+
+        return dummy->next;
+
+    }
+};
+```
+
+
+
+### 性能分析
+
+两个链表长度分别为m和n。
+
+时间复杂度：两个链表都遍历了一遍，$$O(m + n)$$。
+
+空间复杂度：存储两个链表的栈，$$O(m + n)$$。
+
+参考做法一样。
+
