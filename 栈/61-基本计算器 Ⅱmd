@@ -1,0 +1,320 @@
+# 61-基本计算器Ⅱ
+
+<img src="https://crayon-1302863897.cos.ap-beijing.myqcloud.com/image/image-20210610222331715.png" alt="image-20210610222331715" style="zoom:50%;" />
+
+
+
+## 自己的做法
+
+啊！！！我自己的做法，实在是太繁琐，太麻烦了。我根本就不想写上去。但是不写又感觉对不住我自己做了那么半天。
+
+我为什么想不出来简洁易懂的解法啊！！！
+
+
+
+### 算法思想
+
+思想就是用优先级来做
+
+算了，懒得解释了。太麻烦。以后看不看得懂听天由命吧。
+
+### 算法实现
+
+```c++
+class Solution {
+public:
+    unordered_map<char, int> priority;
+    void init_priority() {
+        priority['-'] = 1;
+        priority['+'] = 1;
+        priority['*'] = 2;
+        priority['/'] = 2;
+
+    }
+    int calculate(string s) {
+        init_priority();
+        s.push_back('+');
+        stack<int> number;
+        stack<char> oper;
+        string num;
+        for(char ch :s) {
+            if(ch == ' ') {
+
+            } else if(isdigit(ch)) {
+                num.push_back(ch);
+            } else {
+                number.push(stoi(num));
+                num.clear();
+                if(oper.empty() || priority[ch] > priority[oper.top()]) {
+                    oper.push(ch);
+                } else {
+                    while (!oper.empty() && priority[ch] <= priority[oper.top()]) {
+                        int num2 = number.top();
+                        number.pop();
+                        int num1 = number.top();
+                        number.pop();
+                        int temp;
+                        switch (oper.top()) {
+                            case '+':
+                                temp = num1 + num2;
+                                break;
+                            case '-':
+                                temp = num1 - num2;
+                                break;
+                            case '*':
+                                temp = num1 * num2;
+                                break;
+                            case '/':
+                                temp = num1 / num2;
+                                break;
+                        }
+                        number.push(temp);
+                        oper.pop();
+                    }
+                    oper.push(ch);
+                }
+            }
+        }
+
+        return number.top();
+
+    }
+};
+```
+
+
+
+### 性能分析
+
+没什么好分析的。
+
+
+
+## 参考做法
+
+
+
+### 算法思想
+
+这道题没有左括号右括号。
+
+所以不是很复杂。
+
+因为乘除运算大于加减运算，所以可以先进行所有的乘除运算。并将这些运算结果放回原表达式，就变成一个加减式子。
+
+减去一个数，就是加上一个数的负数，所以减运算可变成加运算。
+
+基于以上，可以用一个栈，来保存所有待加减的数，包括进行了乘除运算后的。
+
+对于加减号后的数字，直接入栈。如果是加号，原数入栈；如果是减号，原数加负号入栈。
+
+对于乘除号后的数字，将栈顶元素与该数做乘除运算后，再放回栈中。
+
+因为可以设置一个pre变量来表示每个数字之前的运算符，根据pre来决定下一步操作：
+
+- 加号：原数入栈
+- 减号：原数的相反数入栈
+- 乘除号：将栈顶元素与该数做乘除元素，用结果替换掉栈顶元素
+
+最后将栈中元素依次加起来即是最后结果。
+
+
+
+### 算法实现
+
+```c++
+class Solution {
+public:
+    int calculate(string s) {
+        char pre = '+';
+        s.push_back('+');
+        stack<int> number;
+        string num;
+        for(char ch : s) {
+            if(isdigit(ch)) {
+                num.push_back(ch);
+            } else if(!isdigit(ch) && ch != ' ') {
+                switch (pre) {
+                    case '+':
+                        number.push(stoi(num));
+                        break;
+                    case '-':
+                        number.push(-stoi(num));
+                        break;
+                    case '*':
+                        number.top() *= stoi(num);
+                        break;
+                    case '/':
+                        number.top() /= stoi(num);
+                        break;
+                }
+                num.clear();
+                pre = ch;
+            }
+        }
+        int res = 0;
+        while (!number.empty()) {
+            res += number.top();
+            number.pop();
+        }
+        return res;
+
+    }
+};
+```
+
+
+
+**注意：遍历到最后一个字符时，一定是数字，所以会执行第一个if语句，然后循环结束，等于最后一个数字没有参与运算，为了避免这种情况，可以先在字符串后添加一个+号。这样最后一个数字就会进行运算。**
+
+
+
+### 性能分析
+
+时间复杂度：$$O(n)$$。
+
+空间复杂度：$$O(n)$$。
+
+
+
+
+
+## 通用解法
+
+### 算法思想
+
+使用双栈解法。不止适用于这一道题。对于所有 表达式计算 这一类问题，都可以使用该解法。
+
+使用两个栈：
+
+1. `nums`：存放操作数
+2. `ops`：存放操作符和`(`
+
+然后从头遍历表达式，对遍历到的字符分情况讨论：
+
+- 空格：跳过
+- `(`：入栈ops
+- `)`：使用当前的nums和ops栈进行计算，即取出两个运算数，一个运算符，将运算的结果放入nums中。 直到遇到左边最近的一个左括号为止，计算结束后将左括号弹出。
+- 数字：从当前位置开始往后取，将整个连续数字取出，放入nums中
+- 运算符(+ - * / ^ %)：如果[栈内运算符]的优先级大于或等于[当前运算符]的优先级，就使用现有在nums和ops进行运算，直到ops为空或遇到左括号或[栈内运算符]优先级小于[当前运算符]。最后将当前运算符放入ops中。
+
+
+
+#### 理解优先级
+
+乘除的优先级大于加减。
+
+假设当前已扫描了`1 + 2`，nums栈中为1 2，ops栈为`+`.
+
+1. 如果后面是`+ 2`或`- 2`，满足[栈内运算符]的优先级大于等于[当前运算符]，即`+`等于`+`或`-`。
+2. 如果后面是`*2`或`/ 2`，`+`优先级小于`*`或`/`，因此不满足[栈内运算符]的优先级大于等于[当前运算符]。就将当前运算符入栈，而不能去计算 1 + 2。
+
+
+
+**注意：**
+
+1. 由于第一个数可能是负数，为了减少边界运算可以先往nums中添加一个0，如果`-2 + 1`，就会变成`0-2+1`。
+2. 由于括号内首个字符为运算符(`+`或`-`)，同样应该添加一个0，如`1 + (-2 -1)`，应该变成`1 + (0-2-1)`。
+
+
+
+
+
+### 算法实现
+
+```c++
+class Solution {
+public:
+
+    void calc(stack<int> &nums, char oper) {
+        if(nums.size() < 2) {
+            return;
+        }
+        int a = nums.top();nums.pop();
+        int b = nums.top();nums.pop();
+        int res;
+        switch (oper) {
+            case '+':
+                res = b + a;
+                break;
+            case '-':
+                res = b - a;
+                break;
+            case '*':
+                res = b * a;
+                break;
+            case '/':
+                res = b / a;
+                break;
+        }
+        nums.push(res);
+    }
+
+    int calculate(string s) {
+        unordered_map<char, int> prior;
+        prior.insert({'+' , 1});
+        prior.insert({'-' , 1});
+        prior.insert({'*' , 2});
+        prior.insert({'/' , 2});
+        stack<int> nums;
+        stack<char> ops;
+        nums.push(0);
+        s.push_back('+');
+        int number = 0;
+        int n = s.length();
+        for(int i = 0; i < n; i++) {
+            if(s[i] == ' ') {
+                continue;
+            } else if(s[i] == '(') {
+                ops.push(s[i]);
+            } else if(s[i] == ')') {
+                while (!ops.empty() && ops.top() != '(') {
+                    calc(nums, ops.top());
+                    ops.pop();
+                }
+                //弹出左括号
+                ops.pop();
+            } else  {
+                if(isdigit(s[i])) {
+                    number = 0;
+                    while (isdigit(s[i])) {
+                        number = number * 10 + int(s[i] - '0');
+                        i++;
+                    }
+                    //因为for循环还要加1，所以这里要减1
+                    i--;
+                    nums.push(number);
+                } else {
+                    if(i > 0 && s[i - 1] == '(') {
+                        nums.push(0);
+                    }
+                    while (!ops.empty() && ops.top() != '(' && prior[s[i]] <= prior[ops.top()]) {
+                        calc(nums, ops.top());
+                        ops.pop();
+                    }
+                    //把当前运算符放入ops中
+                    ops.push(s[i]);
+                }
+            }
+        }
+		//计算剩下的
+        while (!ops.empty()) {
+            calc(nums, ops.top());
+            ops.pop();
+        }
+        return nums.top();
+
+    }
+};
+```
+
+
+
+### 性能分析
+
+时间复杂度:$$O(n)$$。
+
+空间复杂度：$$O(n)$$。
+
+
+
